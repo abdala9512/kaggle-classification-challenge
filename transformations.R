@@ -11,8 +11,9 @@ library(ranger)
 library(caret)
 library(Metrics)
 
-source("../kaggle_regression/ggplot_custom_theme.R")
+source("ggplot_custom_theme.R")
 
+# Crear la carpeta "data" con los datos para que el script funcione
 trainOriginal <- read_excel("data/traintelco.xlsx")
 testOriginal <- read_excel("data/testelco.xlsx")
 
@@ -35,3 +36,5 @@ transformDF <- function(dataframe){
 
 trainOriginal %<>% transformDF()
 testOriginal %<>% transformDF()
+
+

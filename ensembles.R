@@ -12,6 +12,7 @@ library(caret)
 library(Metrics)
 library(lightgbm)
 library(catboost)
+library(pROC)
 
 
 source("ggplot_custom_theme.R")
@@ -174,8 +175,82 @@ light_predictions <- predict(lgbm, as.matrix(test_x))
 
 modelReport(predictions = light_predictions, observed = test_y)
 
+roc(test_y,
+    light_predictions,
+    plot = TRUE,
+    legacy.axes = TRUE,
+    #percent = TRUE,
+    xlab = "Tasa Falsos positivos",
+    ylab = "Tasa verdaderos positivos",
+    col = "#377eb8",
+    lwd = 1.5,
+    main = "Curva ROC - Light GBM",
+    #xlim = c(100,0),
+    #ylim = c(0,100),
+    #xaxs="i",
+    #yaxs="i",
+    print.auc = TRUE)
 
-# Ensemble
+
+# beneficios --------------------------------------------------------------
+
+pr<-prediction(light_predictions, test_y)
+tablafinan<-performance(pr,measure="rec")
+cutoffs<-unlist(tablafinan@x.values)
+recalls<-unlist(tablafinan@y.values)
+
+tablafina2<-performance(pr,measure="prec")
+precisions<-unlist(tablafina2@y.values)
+
+
+tablacruce<-as.data.frame(cbind(cutoffs,precisions,recalls))
+#ver precisiones versus exhaustividad
+plot(tablacruce$precisions,tablacruce$recalls)
+
+
+balance<-table(trainOriginal$resultado)
+
+#calcular las ganancias
+tablacruce$wins<-prop.table(balance)[2]*recalls*(500-(100/precisions))
+#pintar las ganancias versus los cutoffs
+
+tablacruce %>%  ggplot(aes(x = cutoffs, y = wins)) +
+  geom_point(alpha = 0.2, color = "#3E065F") +
+  custom_style() +
+  labs(
+    title = "Ganancias Light GBM vs. Cut-offs",
+  ) +
+  ylab("Ganancias")
+
+bst_cutoff <- tablacruce[which.max(tablacruce$wins),"cutoffs"]
+
+classifications <- ifelse(lightCVPreds > bst_cutoff,1,0)
+
+Metrics::accuracy(test_y, classifications)
+Metrics::f1(test_y, classifications)
+Metrics::recall(test_y, classifications)
+
+confusionMatrix(
+  factor(test_y),
+  factor(classifications), positive = "1"
+)
+
+feature_importances <- lgb.importance(lgbm, percentage = TRUE)
+feature_importances %>%
+  arrange(desc(Gain)) %>%
+  ggplot(aes(x = reorder(Feature, Gain), y = Gain)) +
+  geom_bar(stat = 'identity', fill = "#125C13") +
+  coord_flip() +
+  custom_style() +
+  labs(
+    title = "Importancia de variables en el modelo"
+  ) +
+  xlab("Variable")
+
+
+
+# Ensamble ----------------------------------------------------------------
+
 
 ensemble_predictions <- (xgboostPreds + light_predictions) / 2
 
@@ -214,6 +289,7 @@ testLGBM <- predict(lgbm, as.matrix(testOriginal %>% select(-c(fecha_nacimiento,
                                                              edad,
                                                              mora30))))
 
+
 test_predictions_df <- tibble(
   xgboost = testXGB,
   lightgbm = testLGBM
@@ -223,10 +299,10 @@ testPredictions <-  apply(test_predictions_df, 1, geometric.mean)
 
 submissionDF <- data.frame(
   id = testOriginal$id,
-  resultado = testPredictions
+  resultado = testLGBM
 ) %>%  mutate(resultado = round(resultado,4))
 
-write.csv(submissionDF, "./data/ensembleXGBoost_lightGBM.csv",row.names = FALSE)
+write.csv(submissionDF, "./data/lightGBM.csv",row.names = FALSE)
 
 
 

@@ -94,7 +94,7 @@ descriptivasnum <- describe(trainOriginal %>% select(antiguedad,facturacion,mora
 descriptivasnum
 
 descriptivas<- summary(trainOriginal %>% select(antiguedad,facturacion,mora,
-                                                     minutos,edad, month))
+                                                minutos,edad, month))
 descriptivas
 
 prop.table(table(tipo_cliente))
@@ -108,11 +108,11 @@ negativos
 trainOriginal2 <- negativos <- filter(trainOriginal, facturacion>0)
 
 descriptivasnum2 <- describe(trainOriginal2 %>% select(antiguedad,facturacion,mora,
-                                                     minutos,edad, month))
+                                                       minutos,edad, month))
 descriptivasnum2
 
 descriptivas2<- summary(trainOriginal2 %>% select(antiguedad,facturacion,mora,
-                                                minutos,edad, month))
+                                                  minutos,edad, month))
 descriptivas2
 
 boxplot.stats(minutos)
@@ -124,11 +124,11 @@ quantile(minutos, probs = c(0.1,0.2,0.3,0.45,0.5,0.6,0.7,0.8,0.9,0.91,0.92,0.93,
 attach(testOriginal)
 
 destest <- describe(testOriginal %>% select(antiguedad,facturacion,mora,
-                                                     minutos,edad, month))
+                                            minutos,edad, month))
 destest
 
 destest2<- summary(testOriginal %>% select(antiguedad,facturacion,mora,
-                                                minutos,edad, month))
+                                           minutos,edad, month))
 destest2
 
 prop.table(table(tipo_cliente))

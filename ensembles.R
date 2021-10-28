@@ -194,6 +194,8 @@ roc(test_y,
 
 # beneficios --------------------------------------------------------------
 
+
+
 pr<-prediction(light_predictions, test_y)
 tablafinan<-performance(pr,measure="rec")
 cutoffs<-unlist(tablafinan@x.values)
@@ -211,7 +213,8 @@ plot(tablacruce$precisions,tablacruce$recalls)
 balance<-table(trainOriginal$resultado)
 
 #calcular las ganancias
-tablacruce$wins<-prop.table(balance)[2]*recalls*(500-(100/precisions))
+tablacruce$wins<- prop.table(balance)[2] * recalls * (267000*2-(100000/precisions))
+
 #pintar las ganancias versus los cutoffs
 
 tablacruce %>%  ggplot(aes(x = cutoffs, y = wins)) +
@@ -224,7 +227,7 @@ tablacruce %>%  ggplot(aes(x = cutoffs, y = wins)) +
 
 bst_cutoff <- tablacruce[which.max(tablacruce$wins),"cutoffs"]
 
-classifications <- ifelse(lightCVPreds > bst_cutoff,1,0)
+classifications <- ifelse(light_predictions > bst_cutoff,1,0)
 
 Metrics::accuracy(test_y, classifications)
 Metrics::f1(test_y, classifications)
